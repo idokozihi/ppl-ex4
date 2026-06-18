@@ -1,0 +1,103 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsmath}
+
+\title{Exercise 4 - Theoretical Questions\\
+Question 1: Lazy Lists}
+\author{
+IDO KOZIHI \\
+IDO UZIYAHU
+}
+\date{June 2026}
+
+\begin{document}
+
+\maketitle
+
+\section*{Question 1.1: Lazy Lists}
+
+\subsection*{(a) Equivalence Criterion}
+
+Two lazy lists are considered equivalent if, after any finite number of applications of \texttt{tail}, either both lists are empty, or both lists have a defined \texttt{head} and these two \texttt{head} values are equal.
+
+\subsection*{(b) Equivalence of \texttt{even-square-1} and \texttt{even-square-2}}
+
+Let
+\[
+L_1 = \texttt{even-square-1}
+\]
+and
+\[
+L_2 = \texttt{even-square-2}.
+\]
+
+We consider an arbitrary natural number \(T\) produced by \texttt{integers-from 0}.
+
+In \(L_1\), the number \(T\) is first mapped to \(T^2\), and then the filter checks whether \(T^2\) is even.
+
+In \(L_2\), the number \(T\) is first filtered according to whether \(T\) is even, and only then it is mapped to \(T^2\).
+
+We split into two cases.
+
+If \(T\) is even, then \(T^2\) is also even. Therefore, in \(L_1\), the value \(T^2\) passes the filter. In \(L_2\), the value \(T\) passes the filter and is then mapped to \(T^2\). Thus, in both lists, the same value \(T^2\) appears.
+
+If \(T\) is odd, then \(T^2\) is also odd. Therefore, in \(L_1\), the value \(T^2\) does not pass the filter. In \(L_2\), the value \(T\) does not pass the filter before the mapping. Thus, in both lists, \(T\) contributes no value to the final lazy list.
+
+Hence, for every natural number \(T\), either both lists include the same value \(T^2\), or both lists exclude it. Since both \texttt{map} and \texttt{filter} preserve the original order of the remaining elements, both lazy lists produce the same sequence:
+\[
+0, 4, 16, 36, 64, \ldots
+\]
+
+Therefore, according to the equivalence criterion defined in part (a), \(L_1\) and \(L_2\) are equivalent lazy lists.
+
+
+\vspace{20pt}
+\section*{Question 2: CPS}
+\subsection*{(a)}
+A procedure \texttt{func} of type \([A_1*...*A_n \rightarrow T \mid \textit{'fail}]\) and its Success-Fail-Continuations version \texttt{func\$} of type \([A_1*...*A_n*[T \rightarrow T1]*[Empty \rightarrow T2] \rightarrow T1 \mid T2]\) are equivalent if and only if for every valid sequence \(x_1, \dots, x_n\) and any continuation functions \texttt{success} and \texttt{fail}
+
+
+\begin{enumerate}
+    \item \((\texttt{func} \ x_1 \dots x_n)\) will terminate and return value \(\text{res} \neq \textit{'fail} \iff (\texttt{func\$} \ x_1 \dots x_n \text{ success } \text{fail})\) results in the evaluation of \((\text{success } \text{res})\).
+    
+    \item \((\texttt{func} \ x_1 \dots x_n)\) will terminate and return \(\textit{'fail} \iff (\texttt{func\$} \ x_1 \dots x_n \text{ success } \text{fail})\) results in the evaluation of \((\text{fail})\).
+    
+    \item \((\texttt{func} \ x_1 \dots x_n)\) does not terminate \(\iff (\texttt{func\$}  \ x_1 \dots x_n \text{ success } \text{fail})\) does not terminate.
+\end{enumerate}
+
+\subsection*{2d}
+We will prove \texttt{get-value} and \texttt{get-value\$} equivalence using induction on \(n = \text{len}(\text{assoc-list})\).
+
+\subsubsection*{Base Case}
+On \(n=0\), \((\text{empty? } \text{assoc-list})\) evaluates to \texttt{true}. Therefore, \texttt{get-value} will terminate and return \(\textit{'fail}\), and \texttt{get-value\$} will evaluate \((\text{fail})\).
+
+\subsubsection*{Proposition}
+For every \(n > 0\), we will assume that for every \texttt{assoc-list} with \(\text{len}(\text{assoc-list}) = n\), \texttt{get-value} and \texttt{get-value\$} are equivalent.
+
+\subsubsection*{Induction Step}
+We will prove that \((\text{get-value } \text{assoc-list } \text{key})\) and \((\text{get-value\$} \text{ assoc-list } \text{key } \text{success } \text{fail})\) are equivalent for an \texttt{assoc-list} with \(\text{len}(\text{assoc-list}) = n+1\).
+
+For easier reading, we will refer to \((\text{get-value } \text{assoc-list } \text{key})\) as \texttt{get-value} and \((\text{get-value\$} \text{ assoc-list } \text{key } \text{success } \text{fail})\) as \texttt{get-value\$}.
+
+Since \(\text{len}(\text{assoc-list}) > 0\), \texttt{get-value} will evaluate to:
+\begin{verbatim}
+(if (eq? key (car (car assoc-list)))
+    (cdr (car assoc-list))
+    (get-value (cdr assoc-list) key))
+\end{verbatim}
+and \texttt{get-value\$} will evaluate to:
+\begin{verbatim}
+(if (eq? key (car (car assoc-list)))
+    (success (cdr (car assoc-list)))
+    (get-value$ (cdr assoc-list) key success fail))
+\end{verbatim}
+
+\paragraph{Case 1:} \texttt{(eq? key (car (car assoc-list)))} evaluates to \texttt{\#t}\\
+In this case, \texttt{get-value} will evaluate to \texttt{(cdr (car assoc-list))}, and \texttt{get-value\$} will evaluate to \texttt{(success (cdr (car assoc-list)))}. Therefore, they are equivalent.
+
+\paragraph{Case 2:} \texttt{(eq? key (car (car assoc-list)))} evaluates to \texttt{\#f}\\
+Here, \texttt{get-value} will return the evaluation of \texttt{(get-value (cdr assoc-list) key)}, and \texttt{get-value\$} will evaluate \texttt{(get-value\$ (cdr assoc-list) key success fail)}.
+
+By assuming the induction hypothesis for \texttt{(cdr assoc-list)}, which has length \(n\), it follows that \texttt{(get-value (cdr assoc-list) key)} and \texttt{(get-value\$ (cdr assoc-list) key success fail)} are equivalent. Therefore, \texttt{get-value} and \texttt{get-value\$} are equivalent.
+
+\end{document}
