@@ -96,7 +96,12 @@
 ;;Tests: (get-value '((a . 3) (b . 4)) 'b) --> 4,(get-value '((a . 3) (b . 4)) 'c) --> 'fail
 (define get-value
   (lambda (assoc-list key)
-   @TODO
+   (if (empty? assoc-list) 'fail
+     (if (eq? key (car (car assoc-list)))
+      (cdr (car assoc-list))
+      (get-value (cdr assoc-list) key)
+     )
+   )
   )
 )
 
@@ -106,7 +111,12 @@
 ;;Tests: > (get-value$ '((a . 3) (b . 4)) 'b (lambda(x) (* x x )) (lambda()#f)) --> 16, (get-value$ '((a . 3) (b . 4)) 'c (lambda(x) (* x x)) (lambda()#f)) --> #f
 (define get-value$
   (lambda (assoc-list key success fail)
-   @TODO
+   (if (empty? assoc-list) (fail)
+     (if (eq? key (car (car assoc-list)))
+      (success (cdr (car assoc-list)))
+      (get-value$ (cdr assoc-list) key success fail)
+     )
+   )
   )
 )
 
@@ -121,13 +131,24 @@
 
 (define collect-all-values-1
  (lambda (lists key)
-  @TODO
+  (if (empty? lists) '()
+    (let ((res (get-value (car lists) key)))
+      (if (eq? 'fail res) (collect-all-values-1 (cdr lists) key)
+        (cons res (collect-all-values-1 (cdr lists) key))
+      )
+    )
+  )
  )
 )
 
 (define collect-all-values-2
  (lambda (lists key)
-  @TODO
+  (if (empty? lists) '()
+    (get-value$ (car lists) key
+      (lambda (res-success) (cons res-success (collect-all-values-2 (cdr lists) key)))
+      (lambda() (collect-all-values-2 (cdr lists) key))
+    )
+  )
  )
 )
    
